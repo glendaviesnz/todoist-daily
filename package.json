@@ -1,0 +1,17 @@
+{
+  "name": "todoist-daily",
+  "version": "0.0.1",
+  "description": "A simple script to create a daily standup post based on Todoist tasks to send to a slack channel",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "glendaviesnz",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "dayjs": "^1.10.6",
+    "install": "^0.13.0",
+    "npm": "^7.19.1"
+  }
+}
