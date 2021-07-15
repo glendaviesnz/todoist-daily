@@ -48,7 +48,10 @@ function formatTask(task) {
     const markdownLinkRegex = /\[(.*)\]\(((?:\/|https?:\/\/)[\w\d.\/?=#-_]+)\)/g;
     const linkedTask = task.replace(markdownLinkRegex, "<$2|$1>");
 
-    if (task.toLowerCase().includes('review')) {
+    if (task.toLowerCase().includes('follow up')) {
+        return `:keyboard: ${linkedTask}`;
+    }
+    if (task.toLowerCase().includes('review') || task.toLowerCase().includes('look at')) {
         return `:eyes: ${linkedTask}`;
     }
     if (task.toLowerCase().includes('test')) {
@@ -60,9 +63,14 @@ function formatTask(task) {
     if (task.toLowerCase().includes('bug')) {
         return `:bug2: ${linkedTask}`;
     }
-    if (task.toLowerCase().includes('meeting')) {
+    if (task.toLowerCase().includes('fix')) {
+        return `:hammer_and_wrench: ${linkedTask}`;
+    }
+    if (task.toLowerCase().includes('meeting') || task.toLowerCase().includes('1:1')) {
         return `:zoom: ${linkedTask}`;
     }
-
+    if (task.toLowerCase().includes('watch')) {
+        return `:tv: ${linkedTask}`;
+    }
     return `:keyboard: ${linkedTask}`;
 }
