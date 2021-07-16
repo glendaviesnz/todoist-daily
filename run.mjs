@@ -5,36 +5,48 @@ import isToday from 'dayjs/plugin/isToday.js'
 
 import { config } from './config.mjs';
 
-let slackMessage;
+
 dayjs.extend(isYesterday);
 dayjs.extend(isToday)
-
-slackMessage = "*Glen Davies* posted an update for *Dotcom View Standup*\n\n*How do you feel today?*\n\n:green-dot:\n\n*What did you do yesterday?*\n\n";
 const api = axios.create({
     headers: {'Authorization': `Bearer ${config.todoistToken}`}
-  });
+});
+  
+let slackMessage;
+slackMessage = "*Glen Davies* posted an update for *Dotcom View Standup*\n\n*How do you feel today?*\n\n:green-dot:\n\n*What did you do yesterday?*\n\n";
 
-api.get('https://api.todoist.com/sync/v8/completed/get_all').then((result) => {
-    const yesterdaysTasks = result.data.items.filter(item => {
-        return item.project_id === config.todoistProject && dayjs(item.completed_date).isYesterday();
-    }).map(item => item.content);
-   
-    yesterdaysTasks.forEach((task) => slackMessage += formatTask(task) + "\n");
+const yesterdaysMessage = await getYesterdaysTasks();
+const todaysMessage = await getTodaysTasks();
+slackMessage += yesterdaysMessage + todaysMessage;
+postToSlack();
 
-    api.get('https://api.todoist.com/sync/v8/sync?sync_token=*&resource_types=[\"items\"]').then((result) => {
+async function getYesterdaysTasks() {
+    return api.get('https://api.todoist.com/sync/v8/completed/get_all').then((result) => {
+        const yesterdaysTasks = result.data.items.filter(item => {
+            return item.project_id === config.todoistProject && dayjs(item.completed_date).isYesterday();
+        }).map(item => item.content);
+        let yesterdaysTasksMessage;
+        yesterdaysTasks.forEach((task) => yesterdaysTasksMessage += formatTask(task) + "\n");
+        return yesterdaysTasksMessage;
+ 
+    });
+}
+
+async function getTodaysTasks() {
+    return api.get('https://api.todoist.com/sync/v8/sync?sync_token=*&resource_types=[\"items\"]').then((result) => {
         const todaysTasks = result.data.items.filter(item => {
             return item.project_id === config.todoistProject && dayjs(item.due.date).isToday();
         }).map(item => item.content);
-        slackMessage += "\n\n*What will you do today?*\n\n";
-        todaysTasks.forEach((task) => slackMessage += formatTask(task) + "\n");
-        slackMessage += "\n\n*Anything blocking your progress?*\n\nNo";
-    }).then(() => {
-        run().catch(err => console.log(err));
-    });
-});
+        let todaysTasksMessage;
+        todaysTasksMessage += "\n\n*What will you do today?*\n\n";
+        todaysTasks.forEach((task) => todaysTasksMessage += formatTask(task) + "\n");
+        todaysTasksMessage += "\n\n*Anything blocking your progress?*\n\nNo";
+        return todaysTasksMessage;
+    })
+}
 
 
-async function run() {
+async function postToSlack() {
   const url = 'https://slack.com/api/chat.postMessage';
   const res = await axios.post(url, {
     channel: config.slackChannel,
