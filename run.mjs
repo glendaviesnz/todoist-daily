@@ -13,11 +13,11 @@ const api = axios.create({
 });
   
 let slackMessage;
-slackMessage = "*Glen Davies* posted an update for *Dotcom View Standup*\n\n*How do you feel today?*\n\n:green-dot:\n\n*What did you do yesterday?*\n\n";
+slackMessage = "*Glen Davies* posted an update for *Dotcom View Standup*\n\n";
 
 const yesterdaysMessage = await getYesterdaysTasks();
 const todaysMessage = await getTodaysTasks();
-slackMessage += yesterdaysMessage + todaysMessage;
+
 postToSlack();
 
 async function getYesterdaysTasks() {
@@ -25,7 +25,7 @@ async function getYesterdaysTasks() {
         const yesterdaysTasks = result.data.items.filter(item => {
             return item.project_id === config.todoistProject && dayjs(item.completed_date).isYesterday();
         }).map(item => item.content);
-        let yesterdaysTasksMessage;
+        let yesterdaysTasksMessage = '';
         yesterdaysTasks.forEach((task) => yesterdaysTasksMessage += formatTask(task) + "\n");
         return yesterdaysTasksMessage;
  
@@ -37,10 +37,8 @@ async function getTodaysTasks() {
         const todaysTasks = result.data.items.filter(item => {
             return item.project_id === config.todoistProject && dayjs(item.due.date).isToday();
         }).map(item => item.content);
-        let todaysTasksMessage;
-        todaysTasksMessage += "\n\n*What will you do today?*\n\n";
+        let todaysTasksMessage = '';
         todaysTasks.forEach((task) => todaysTasksMessage += formatTask(task) + "\n");
-        todaysTasksMessage += "\n\n*Anything blocking your progress?*\n\nNo";
         return todaysTasksMessage;
     })
 }
@@ -51,8 +49,34 @@ async function postToSlack() {
   const res = await axios.post(url, {
     channel: config.slackChannel,
       text: slackMessage,
-      unfurl_links: false,
-      unfurl_media: false
+      "attachments": [
+        {
+	        "mrkdwn_in": ["text"],
+            "color": "#dedede",
+            "title": "How do you feel today?",
+            "text": ":green-dot:",
+          },
+        {
+	        "mrkdwn_in": ["text"],
+            "color": "#bbd4d5",
+            "title": "What did you do yesterday?",
+            "text": yesterdaysMessage,
+          },
+          {
+	        "mrkdwn_in": ["text"],
+            "color": "#7a90b2",
+            "title": "What will you do today?",
+            "text": todaysMessage,
+          },
+          {
+	        "mrkdwn_in": ["text"],
+            "color": "#df9593",
+            "title": "Anything blocking your progress?",
+            "text": "No",
+        }
+    ],
+    unfurl_links: false,
+    unfurl_media: false
   }, { headers: { authorization: `Bearer ${config.slackToken}` } });
 }
 
@@ -60,29 +84,5 @@ function formatTask(task) {
     const markdownLinkRegex = /\[(.*)\]\(((?:\/|https?:\/\/)[\w\d.\/?=#-_]+)\)/g;
     const linkedTask = task.replace(markdownLinkRegex, "<$2|$1>");
 
-    if (task.toLowerCase().includes('follow up')) {
-        return `:keyboard: ${linkedTask}`;
-    }
-    if (task.toLowerCase().includes('review') || task.toLowerCase().includes('look at')) {
-        return `:eyes: ${linkedTask}`;
-    }
-    if (task.toLowerCase().includes('test')) {
-        return `:crash-test-dummy: ${linkedTask}`;
-    }
-    if (task.toLowerCase().includes('read')) {
-        return `:reading: ${linkedTask}`;
-    }
-    if (task.toLowerCase().includes('bug')) {
-        return `:bug2: ${linkedTask}`;
-    }
-    if (task.toLowerCase().includes('fix')) {
-        return `:hammer_and_wrench: ${linkedTask}`;
-    }
-    if (task.toLowerCase().includes('meeting') || task.toLowerCase().includes('1:1')) {
-        return `:zoom: ${linkedTask}`;
-    }
-    if (task.toLowerCase().includes('watch')) {
-        return `:tv: ${linkedTask}`;
-    }
-    return `:keyboard: ${linkedTask}`;
+    return `• ${linkedTask}`;
 }
