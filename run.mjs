@@ -22,11 +22,15 @@ postToSlack();
 
 async function getYesterdaysTasks() {
     return api.get('https://api.todoist.com/sync/v8/completed/get_all').then((result) => {
+        const daysToSubtract = dayjs().format('ddd') === 'Mon' ? 3 : 1;
+
         const yesterdaysTasks = result.data.items.filter(item => {
-            return item.project_id === config.todoistProject && dayjs(item.completed_date).isYesterday();
+            return item.project_id === config.todoistProject && dayjs(item.completed_date).isSame(dayjs().subtract(daysToSubtract, 'day'), 'day');
         }).map(item => item.content);
+
         let yesterdaysTasksMessage = '';
         yesterdaysTasks.forEach((task) => yesterdaysTasksMessage += formatTask(task) + "\n");
+        
         return yesterdaysTasksMessage;
  
     });
