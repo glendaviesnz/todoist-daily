@@ -2,6 +2,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import isYesterday from 'dayjs/plugin/isYesterday.js'
 import isToday from 'dayjs/plugin/isToday.js'
+import inquirer from 'inquirer';
 
 import { config } from './config.mjs';
 
@@ -12,15 +13,51 @@ const api = axios.create({
     headers: {'Authorization': `Bearer ${config.todoistToken}`}
 });
   
+const feelingEmojis = {
+  great: ':green-dot:',
+  ok: ':orange-dot:',
+  ok: ':red-dot:',
+}
 let slackMessage;
-slackMessage = "*Glen Davies* posted an update for *Dotcom View Standup*\n\n";
+slackMessage = `*${config.yourName}* posted an update for *Dotcom View Standup*\n\n`;
 
+const { howDoYouFeel } = await howDoYouFeelPrompt();
+const { blockers } = await anyBlockers();
 const yesterdaysMessage = await getYesterdaysTasks();
 const todaysMessage = await getTodaysTasks();
 
 postToSlack();
 
-async function getYesterdaysTasks() {
+function howDoYouFeelPrompt() {
+	return inquirer.prompt( [
+		{
+			type: 'list',
+			message: 'How do you feel today?',
+			name: 'howDoYouFeel',
+			choices: ['great', 'ok', 'terrible'],
+			default: 'Great',
+			pageSize: 3,
+			validate( answer ) {
+				if ( answer.length < 1 ) {
+					return 'You must feel something!';
+				}
+				return true;
+			},
+		},
+	] );
+}
+
+function anyBlockers() {
+	return inquirer.prompt( [
+		{
+			type: 'input',
+			message: 'Any blockers?',
+			name: 'blockers',
+		},
+	] );
+}
+
+function getYesterdaysTasks() {
     return api.get('https://api.todoist.com/sync/v8/completed/get_all').then((result) => {
         const daysToSubtract = dayjs().format('ddd') === 'Mon' ? 3 : 1;
 
@@ -36,7 +73,7 @@ async function getYesterdaysTasks() {
     });
 }
 
-async function getTodaysTasks() {
+function getTodaysTasks() {
     return api.get('https://api.todoist.com/sync/v8/sync?sync_token=*&resource_types=[\"items\"]').then((result) => {
         const todaysTasks = result.data.items.filter(item => {
             return item.project_id === config.todoistProject && dayjs(item.due.date).isToday();
@@ -58,7 +95,7 @@ async function postToSlack() {
 	        "mrkdwn_in": ["text"],
             "color": "#dedede",
             "title": "How do you feel today?",
-            "text": ":green-dot:",
+            "text": feelingEmojis[howDoYouFeel],
           },
         {
 	        "mrkdwn_in": ["text"],
@@ -76,7 +113,7 @@ async function postToSlack() {
 	        "mrkdwn_in": ["text"],
             "color": "#df9593",
             "title": "Anything blocking your progress?",
-            "text": "No",
+            "text": blockers,
         }
     ],
     unfurl_links: false,
