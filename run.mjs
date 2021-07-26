@@ -22,7 +22,7 @@ let slackMessage;
 slackMessage = `*${config.yourName}* posted an update for *Dotcom View Standup*\n\n`;
 
 const { howDoYouFeel } = await howDoYouFeelPrompt();
-const { blockers } = await anyBlockers();
+const { blockers } = await anyBlockersPrompt();
 const yesterdaysMessage = await getYesterdaysTasks();
 const todaysMessage = await getTodaysTasks();
 
@@ -47,7 +47,7 @@ function howDoYouFeelPrompt() {
 	] );
 }
 
-function anyBlockers() {
+function anyBlockersPrompt() {
 	return inquirer.prompt( [
 		{
 			type: 'input',
