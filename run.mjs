@@ -16,7 +16,7 @@ const api = axios.create({
 const feelingEmojis = {
   great: ':green-dot:',
   ok: ':orange-dot:',
-  ok: ':red-dot:',
+  terrible: ':red-dot:',
 }
 let slackMessage;
 slackMessage = `*${config.yourName}* posted an update for *Dotcom View Standup*\n\n`;
