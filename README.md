@@ -12,3 +12,5 @@ Clone this repo and rename `example-config.mjs` to `config.mjs` and update the v
 - The Todoist project id for the project were you keep your daily task list. You can get this from the url if you open that project in the web app
 - A slack `User OAuth Token`. Go to `https://api.slack.com/apps` and set up a new app and set user token scopes to `chat:write` and get the `User OAuth Token` as this script will just post to the channel as you rather than as a bot
 - The name of the channel you want your update posted to
+
+Run `npm start`

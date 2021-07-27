@@ -23,7 +23,9 @@ const { blockers } = await anyBlockersPrompt();
 const yesterdaysMessage = await getYesterdaysTasks();
 const todaysMessage = await getTodaysTasks();
 
-postToSlack();
+await postToSlack();
+
+console.log('All done, I think, unless there are some funny error messages above!');
 
 function howDoYouFeelPrompt() {
 	return inquirer.prompt([
@@ -89,9 +91,16 @@ function getTodaysTasks() {
 		});
 }
 
-async function postToSlack() {
+function formatTask(task) {
+	const markdownLinkRegex = /\[(.*)\]\(((?:\/|https?:\/\/)[\w\d.\/?=#-_]+)\)/g;
+	const linkedTask = task.replace(markdownLinkRegex, '<$2|$1>');
+
+	return `• ${linkedTask}`;
+}
+
+function postToSlack() {
 	const url = 'https://slack.com/api/chat.postMessage';
-	const res = await axios.post(
+	return axios.post(
 		url,
 		{
 			channel: config.slackChannel,
@@ -127,11 +136,4 @@ async function postToSlack() {
 		},
 		{ headers: { authorization: `Bearer ${config.slackToken}` } }
 	);
-}
-
-function formatTask(task) {
-	const markdownLinkRegex = /\[(.*)\]\(((?:\/|https?:\/\/)[\w\d.\/?=#-_]+)\)/g;
-	const linkedTask = task.replace(markdownLinkRegex, '<$2|$1>');
-
-	return `• ${linkedTask}`;
 }
