@@ -92,7 +92,7 @@ function getTodaysTasks() {
 }
 
 function formatTask(task) {
-	const markdownLinkRegex = /\[(.*)\]\(((?:\/|https?:\/\/)[\w\d.\/?=#-_]+)\)/g;
+	const markdownLinkRegex = /\[(.*?)\]\(((?:\/|https?:\/\/)[\w\d.\/?=#-_]+)\)/g;
 	const linkedTask = task.replace(markdownLinkRegex, '<$2|$1>');
 
 	return `• ${linkedTask}`;
