@@ -50,7 +50,7 @@ function anyBlockersPrompt() {
 	return inquirer.prompt([
 		{
 			type: 'input',
-			message: 'Any blockers?',
+			message: 'Need reviews? Any blockers?',
 			name: 'blockers',
 		},
 	]);
@@ -64,7 +64,8 @@ function getYesterdaysTasks() {
 			.filter((item) => {
 				return (
 					item.project_id === config.todoistProject &&
-					dayjs(item.completed_date).isSame(dayjs().subtract(daysToSubtract, 'day'), 'day')
+					(dayjs(item.completed_date).isSame(dayjs().subtract(daysToSubtract, 'day'), 'day') ||
+						dayjs(item.completed_date).isSame(dayjs().subtract(0, 'day'), 'day'))
 				);
 			})
 			.map((item) => item.content);
@@ -82,7 +83,7 @@ function getTodaysTasks() {
 		.then((result) => {
 			const todaysTasks = result.data.items
 				.filter((item) => {
-					return item.project_id === config.todoistProject && dayjs(item.due.date).isToday();
+					return item.project_id === config.todoistProject && dayjs(item.due?.date).isToday();
 				})
 				.map((item) => item.content);
 			let todaysTasksMessage = '';
